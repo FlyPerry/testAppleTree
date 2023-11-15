@@ -70,9 +70,9 @@ a.desc:after {
     color: rgba(255, 255, 255, 0.5);
 }
 
-@media(max-width:767px) {
+@media (max-width: 767px) {
     .nav li > form > button.logout {
-        display:block;
+        display: block;
         text-align: left;
         width: 100%;
         padding: 10px 0;
@@ -87,4 +87,27 @@ a.desc:after {
 
 .nav > li > form > button.logout:focus {
     outline: none;
+}
+
+img.apple_red {
+    filter: hue-rotate(0deg);
+}
+
+img.apple_purple {
+    filter: hue-rotate(283deg);
+
+}
+
+img.apple_green {
+    filter: hue-rotate(113deg);
+
+}
+
+img.apple_ghost {
+    filter: invert(1);
+
+}
+
+img.apple_blue {
+    filter: hue-rotate(239deg);
 }

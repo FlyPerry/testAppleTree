@@ -13,6 +13,7 @@ use Yii;
 use yii\web\Controller;
 use yii\data\ActiveDataProvider;
 use common\models\Apple;
+use yii\web\NotFoundHttpException;
 
 class AppleController extends Controller
 {
@@ -52,10 +53,30 @@ class AppleController extends Controller
 
     private function getRandomColor()
     {
-        $colors = ['red', 'green', 'yellow','rainbow'];
+        $colors = ['red', 'green', 'purple','ghost','blue'];
         return $colors[array_rand($colors)];
     }
 
 
     // Другие методы контроллера (например, управление яблоками) добавляем тут
+
+    /**
+     * Действие для отображения DetailView по ID.
+     *
+     * @param int $id
+     * @return string
+     * @throws NotFoundHttpException
+     */
+    public function actionDetailView($id)
+    {
+        $model = Apple::findOne($id);
+
+        if ($model === null) {
+            throw new NotFoundHttpException("Яблоко с ID $id не найдено.");
+        }
+
+        return $this->renderAjax('_detail-view', [
+            'model' => $model,
+        ]);
+    }
 }
