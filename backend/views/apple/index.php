@@ -38,9 +38,6 @@ foreach ($apples as $apple) {
             <div class="modal-body" id="detail-view-container">
                 <!-- Сюда будет вставлено содержимое DetailView -->
             </div>
-            <div class="modal-footer">
-
-            </div>
         </div>
     </div>
 </div>

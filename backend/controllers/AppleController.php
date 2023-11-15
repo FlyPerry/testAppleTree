@@ -24,8 +24,8 @@ class AppleController extends Controller
      */
     public function actionIndex()
     {
-        // Получаем все яблоки из базы данных
-        $apples = Apple::find()->all();
+        // Получаем все яблоки из базы данных, Кроме съеденных
+        $apples = Apple::find()->where(['!=', 'status', Apple::STATUS_EATEN])->all();
 
         //Не, ну это БАЗА
         $dataProvider = new ActiveDataProvider([
@@ -53,7 +53,7 @@ class AppleController extends Controller
 
     private function getRandomColor()
     {
-        $colors = ['red', 'green', 'purple','ghost','blue'];
+        $colors = ['red', 'green', 'purple', 'ghost', 'blue'];
         return $colors[array_rand($colors)];
     }
 
@@ -79,4 +79,48 @@ class AppleController extends Controller
             'model' => $model,
         ]);
     }
+
+    /**
+     * Действие для броска яблока с дерева.
+     * Проверяет, что яблоко на дереве, уроняет его и сохраняет в базе данных.
+     * @param int $id Идентификатор яблока.
+     * @return string Рендерит представление `_detail-view.php` после выполнения действия.
+     * @throws NotFoundHttpException Если яблоко с указанным ID не найдено.
+     */
+    public function actionFallFromTree($id)
+    {
+        $model = Apple::findOne($id);
+
+        if ($model === null) {
+            throw new NotFoundHttpException("Яблоко с ID $id не найдено.");
+        }
+
+        $model->fallFromTree();
+
+        return $this->redirect(['index']);
+
+    }
+
+    public function actionEat($id)
+    {
+        $model = Apple::findOne($id);
+
+        if ($model === null) {
+            throw new NotFoundHttpException("Яблоко с ID $id не найдено.");
+        }
+
+        if ($model->load(Yii::$app->request->post())) {
+            try {
+                $model->eatPercent($model->percent);
+                $model->save();
+                Yii::$app->session->setFlash('success', 'Яблоко успешно съедено.');
+            } catch (\Exception $e) {
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->redirect(['index']);
+    }
+
+
 }

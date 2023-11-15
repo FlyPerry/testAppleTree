@@ -2,16 +2,18 @@
 
 namespace common\models;
 
+use Psr\Log\NullLogger;
 use Yii;
 use yii\db\ActiveRecord;
 use yii\base\Exception;
 
 class Apple extends ActiveRecord
 {
+    public $percent;
     const STATUS_ON_TREE = 'on_tree';
     const STATUS_ON_GROUND = 'on_ground';
     const STATUS_ROTTEN = 'rotten';
-
+    const STATUS_EATEN = 'eaten';
     /**
      * {@inheritdoc}
      */
@@ -29,7 +31,7 @@ class Apple extends ActiveRecord
             [['color', 'appearanceDate', 'status', 'size'], 'required'],
             [['appearanceDate', 'fallDate'], 'integer'],
             [['status'], 'string'],
-            [['size'], 'number'],
+            [['size','percent'], 'number'],
             [['color'], 'string', 'max' => 255],
         ];
     }
@@ -41,11 +43,11 @@ class Apple extends ActiveRecord
     {
         return [
             'id' => 'ID',
-            'color' => 'Color',
-            'appearanceDate' => 'Appearance Date',
-            'fallDate' => 'Fall Date',
-            'status' => 'Status',
-            'size' => 'Size',
+            'color' => 'Цвет',
+            'appearanceDate' => 'Дата созревания',
+            'fallDate' => 'Дата падения с дерева',
+            'status' => 'Статус',
+            'size' => 'Целостность',
         ];
     }
 
@@ -87,29 +89,50 @@ class Apple extends ActiveRecord
         }
     }
 
-    /**
-     * Съесть яблоко на заданный процент
-     *
-     * @param float $percent
-     * @throws Exception
-     */
-    public function eat($percent)
+    public function fallFromTree()
     {
         if ($this->status === self::STATUS_ON_TREE) {
-            throw new Exception('Съесть нельзя, яблоко на дереве');
+            $this->fallToGround();
+            $this->save();
+            Yii::$app->session->setFlash('success', 'Яблоко успешно упало с дерева.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Яблоко уже на земле или испорчено.');
+        }
+    }
+
+
+    /**
+     * Метод для съедания яблока на указанный процент.
+     * Проверяет состояние яблока и обновляет его размер.
+     * Если размер становится меньше или равен 0, яблоко испорчено (то бишь съедено).
+     * @param int $percent Процент, который нужно съесть.
+     * @throws \Exception Если попытка съесть яблоко на дереве или больше, чем у него есть.
+     */
+    public function eatPercent($percent)
+    {
+        if ($this->status === self::STATUS_ON_TREE) {
+            throw new \Exception('Съесть нельзя, яблоко на дереве');
         }
 
         if ($this->status === self::STATUS_ON_GROUND) {
             $this->rot();
         }
+        if ($this->status === self::STATUS_ROTTEN) {
+            throw new \Exception('Съесть нельзя, испортилось');
+        }
+        $newSize = $this->size - ($percent / 100);
 
-        $this->size -= $percent / 100;
+        if ($newSize < 0) {
+            throw new \Exception('Нельзя съесть больше, чем у яблока есть');
+        }
 
+        $this->size = $newSize;
         if ($this->size <= 0) {
-            $this->status = self::STATUS_ROTTEN;
+            $this->status = self::STATUS_EATEN;
             $this->size = 0;
         }
     }
+
 
     /**
      * Проверка на гнилость
@@ -124,4 +147,6 @@ class Apple extends ActiveRecord
             $this->size = 0;
         }
     }
+
+
 }
